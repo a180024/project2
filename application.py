@@ -25,12 +25,33 @@ def login():
 def chat():
     return render_template('chat.html')
 
+#Display all available channels when page loads
+@socketio.on('connect')
+def connect():
+    display_channels = list(channels.keys())
+    socketio.emit('displayavailchannels', {"channels":display_channels}, broadcast=True)
+
+#Display new channel when created
 @socketio.on('createchannel')
 def createchannel(data):
     newchannel = data['newchannel']
     channels[newchannel] = []
-    print(list(channels.keys()))
-    socketio.emit('displaynewchannel', {"displaynewchannel": newchannel}, broadcast = True)
+    print(channels)
+    socketio.emit('displaynewchannel', {"displaynewchannel":newchannel}, broadcast=True)
+
+#Join channel(room) and emit messages
+@socketio.on('joinchannel')
+def joinchannel(data):
+    channel = data['currentchannel'].strip()
+    print(channel)
+    join_room(channel)
+    try:
+        messages = channels[channel]
+        print(messages)
+    except KeyError as e:
+        print(e)
+    socketio.emit('displaymessages', {"messages":messages}, room=channel)
+
 
 
 
