@@ -29,7 +29,7 @@ def chat():
 @socketio.on('connect')
 def connect():
     display_channels = list(channels.keys())
-    socketio.emit('displayavailchannels', {"channels":display_channels}, broadcast=True)
+    socketio.emit('displayavailchannels', {"channels":display_channels})
 
 #Display new channel when created
 @socketio.on('createchannel')

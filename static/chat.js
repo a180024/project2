@@ -12,6 +12,11 @@ socket.on('connect', () => {
         socket.emit('createchannel', {"newchannel": newchannel});
     };
 });
+
+//Remembering the channel and displaying messages
+if (localStorage.getItem('currentchannel')) {
+    socket.emit('joinchannel', {'newchannel':localStorage.getItem('currentchannel')});
+}
     
 //Display available channels when page loads
 socket.on('displayavailchannels', (data) => {
