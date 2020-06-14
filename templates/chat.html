@@ -17,20 +17,46 @@
     <!-- Handlebars -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
     <script id="displaychannel" type="text/x-handlebars-template">
-	    	{% raw %}
-                <a onclick="select_channel(this)" class="list-group-item list-group-item-action list-group-item-light rounded-0">
-                <div class="media"><img src="https://res.cloudinary.com/mhmd/image/upload/v1564960395/avatar_usae7z.svg" alt="user" width="50" class="rounded-circle">
-                    <div class="media-body ml-4">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-			        <h6 class="mb-0"> {{channel}} </h6><small class="small font-weight-bold">14 Dec</small>
-                    </div>
-		            <p class="font-italic text-muted mb-0 text-small"></p>
-                    </div>
+        {% raw %}
+        <a onclick="select_channel(this)" class="list-group-item list-group-item-action list-group-item-light rounded-0">
+              <div class="media"><img src="https://res.cloudinary.com/mhmd/image/upload/v1564960395/avatar_usae7z.svg" alt="user" width="50" class="rounded-circle">
+                <div class="media-body ml-4">
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h6 class="mb-0">{{channel}}</h6><small class="small font-weight-bold">Channel</small>
+                  </div>
                 </div>
-                </a>
-            {% endraw %}
+              </div>
+            </a>
+        </a>
+        {% endraw %}
     </script>
-    
+
+    <script id="displaymessage-sender" type="text/x-handlebars-template">
+        {% raw %}
+        <div class="media w-50 mb-3"><img src="https://res.cloudinary.com/mhmd/image/upload/v1564960395/avatar_usae7z.svg" alt="user" width="50" class="rounded-circle">
+        <div class="media-body ml-3">
+            <div class="bg-light rounded py-2 px-3 mb-2">
+            <p class="text-small mb-0 text-muted">{{message}}</p>
+            </div>
+            <p class="small text-muted">{{userid}} | {{date}}</p>
+        </div>
+        </div>
+        {% endraw %}
+    </script>
+
+    <script id="displaymessage-receiver" type="text/x-handlebars-template">
+        {% raw %}
+        <div class="media w-50 ml-auto mb-3">
+        <div class="media-body">
+            <div class="bg-primary rounded py-2 px-3 mb-2">
+            <p class="text-small mb-0 text-white">{{message}}</p>
+            </div>
+            <p class="small text-muted">{{userid}} | {{date}}</p>
+        </div>
+        </div>
+        {% endraw %}
+    </script>
+
     </head>
 
     <body>
@@ -72,7 +98,7 @@
                     <div class="modal-body">
                     <form class="newchannel" id="channelform">
                         <input type="text" id="channeltext">
-                        <button type="button" id="channelsubmit" class="btn btn-default" data-dismiss="modal">Create</button>
+                        <button type="button" id="channelsubmit" class="btn btn-default" data-dismiss="modal">Create Channel</button>
                     </form>
                     </div>
                     <div class="modal-footer">
@@ -86,7 +112,7 @@
 
             <div class="messages-box">
             <div class="list-group rounded-0">
-
+     
             </div>
             </div>
         </div>
@@ -94,34 +120,15 @@
         <!-- Chat Box-->
         <div class="col-7 px-0">
         <div class="px-4 py-5 chat-box bg-white">
-            <!-- Sender Message-->
-            <div class="media w-50 mb-3"><img src="https://res.cloudinary.com/mhmd/image/upload/v1564960395/avatar_usae7z.svg" alt="user" width="50" class="rounded-circle">
-            <div class="media-body ml-3">
-                <div class="bg-light rounded py-2 px-3 mb-2">
-                <p class="text-small mb-0 text-muted">Test which is a new approach all solutions</p>
-                </div>
-                <p class="small text-muted">12:00 PM | Aug 13</p>
-            </div>
-            </div>
-
-            <!-- Receiver Message-->
-            <div class="media w-50 ml-auto mb-3">
-            <div class="media-body">
-                <div class="bg-primary rounded py-2 px-3 mb-2">
-                <p class="text-small mb-0 text-white">Test which is a new approach to have all solutions</p>
-                </div>
-                <p class="small text-muted">12:00 PM | Aug 13</p>
-            </div>
-            </div>
 
         </div>
 
         <!-- Typing area -->
-        <form action="#" class="bg-light">
+        <form id="message-form" action="#" class="bg-light">
             <div class="input-group">
-            <input type="text" placeholder="Type a message" aria-describedby="button-addon2" class="form-control rounded-0 border-0 py-4 bg-light">
+            <input id="message-form-text" type="text" placeholder="Type a message" aria-describedby="button-addon2" class="form-control rounded-0 border-0 py-4 bg-light">
             <div class="input-group-append">
-                <button id="button-addon2" type="submit" class="btn btn-link"> <i class="fa fa-paper-plane"></i></button>
+                <button id="button-addon2" type="submit" class="btn btn-link">Send<i class="fa fa-paper-plane"></i></button>
             </div>
             </div>
         </form>
@@ -132,13 +139,11 @@
     <script>
         var socket = io.connect('http://' + document.domain + ':' + location.port); 
 
-        socket.on('connect', () => {
         //Add new channel
+        socket.on('connect', () => {
             var button = document.querySelector('#channelsubmit');
-            console.log(button);
             button.onclick = () => {
                 const newchannel = document.querySelector('#channeltext').value;
-                console.log(newchannel);
                 document.querySelector('#channeltext').value = '';
                 socket.emit('createchannel', {"newchannel": newchannel});
             };
@@ -160,7 +165,7 @@
             display_channel(newchannel);
         });
 
-        //Function to display channel
+        //Function for displaying channel template
         function display_channel(channel) {
             const template = Handlebars.compile(document.querySelector('#displaychannel').innerHTML);
             const content = template({'channel': channel});
@@ -169,9 +174,52 @@
 
         //Function for selecting a channel when clicked
         function select_channel(content) {
-            const currentchannel = content.querySelector('h6').innerHTML;
-            localStorage.setItem('currentchannel', currentchannel);
-            socket.emit('joinchannel', {'currentchannel':currentchannel});
+            const newchannel = content.querySelector('h6').innerHTML;
+            if (localStorage.getItem('currentchannel')) {
+                socket.emit('leavechannel', {'currentchannel': localStorage.getItem('currentchannel')});
+            }
+            localStorage.setItem('currentchannel', newchannel);
+            socket.emit('joinchannel', {'newchannel':newchannel});
+        }
+
+        //Display messages after joining channel 
+        socket.on('displaymessages', (data) => {
+            const messages = data['messages'];
+            console.log(messages);
+            document.querySelector('.chat-box').innerHTML = null;
+            messages.forEach((message) => {
+                display_message(message);
+            })
+        });
+        
+        //Function for displaying new messages in the current channel
+        socket.on('displaynewmessage', (data) => {
+            const message = data['message'];
+            console.log(message);
+            display_message(message);
+        })
+
+        //Function for sending new messages to server
+        document.querySelector('#message-form').addEventListener('submit', (e) => {
+            const message = document.querySelector('#message-form-text').value;
+            document.querySelector('#message-form-text').value = '';
+            console.log(message);
+            e.preventDefault();
+            socket.emit('newmessage', {'currentchannel': localStorage.getItem('currentchannel'), 'userid':localStorage.getItem('userid'), 'message':message});
+        })
+
+        //Function for displaying messages template
+        function display_message(message) {
+            if (message['userid'] === localStorage.getItem('userid')) {
+                const template = Handlebars.compile(document.querySelector('#displaymessage-sender').innerHTML);
+                const content = template({'message': message['message'], 'userid': message['userid'], 'date':message['date']});
+                document.querySelector('.chat-box').innerHTML += content;
+            }
+            else {
+                const template = Handlebars.compile(document.querySelector('#displaymessage-receiver').innerHTML);
+                const content = template({'message': message['message'], 'userid': message['userid'], 'date':message['date']});
+                document.querySelector('.chat-box').innerHTML += content;
+            }
         }
 
     </script>

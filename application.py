@@ -1,5 +1,5 @@
 import os
-
+import datetime
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
@@ -10,6 +10,7 @@ socketio = SocketIO(app)
 
 #Store 100 messages in each channel
 channels = {}
+convos = {}
 
 @app.route('/', methods = ['GET', 'POST'])
 def login():
@@ -34,6 +35,7 @@ def connect():
 #Display new channel when created
 @socketio.on('createchannel')
 def createchannel(data):
+    global channels
     newchannel = data['newchannel']
     channels[newchannel] = []
     print(channels)
@@ -42,7 +44,8 @@ def createchannel(data):
 #Join channel(room) and emit messages
 @socketio.on('joinchannel')
 def joinchannel(data):
-    channel = data['currentchannel'].strip()
+    global channels
+    channel = data['newchannel'].strip()
     print(channel)
     join_room(channel)
     try:
@@ -51,6 +54,31 @@ def joinchannel(data):
     except KeyError as e:
         print(e)
     socketio.emit('displaymessages', {"messages":messages}, room=channel)
+
+#Leave current channel before joining new channel
+@socketio.on('leavechannel')
+def leavechannel(data):
+    channel = data['currentchannel'].strip()
+    print(channel)
+    leave_room(channel)
+    return
+
+#Display new messages in current channel
+@socketio.on('newmessage')
+def newmessage(data):
+    global channels
+    date_time = datetime.datetime.now()
+    date = date_time.strftime('%d') + ' ' + date_time.strftime('%b') + ' ' + date_time.strftime("%H") + ':' + date_time.strftime("%M") 
+    message = {'userid': data['userid'], 'message': data['message'],  'date': date}
+    print(message)
+    channel = data['currentchannel'].strip()
+    if len(channels[channel]) >= 100:
+        channels[channel].pop()
+    channels[channel].append(message)
+    print(channels[channel])
+    socketio.emit('displaynewmessage', {'message': message}, room=channel)
+
+
 
 
 
