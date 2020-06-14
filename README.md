@@ -2,7 +2,7 @@
 
 Attempt at making at Web Chat Application using Flask and Socketio to support real-time messaging.
 
-![Flack](/static/project3.png)
+![Flack](/static/project3.jpg)
 
 Features- 
 1. Creating a display name
