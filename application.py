@@ -10,7 +10,6 @@ socketio = SocketIO(app)
 
 #Store 100 messages in each channel
 channels = {}
-convos = {}
 
 @app.route('/', methods = ['GET', 'POST'])
 def login():
