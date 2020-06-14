@@ -1,6 +1,6 @@
 /* Handling of public channels 
 --------------------------------------------------------------------------------------------------------------------------------------- */
-
+var count = 0;
 var socket = io.connect('http://' + document.domain + ':' + location.port); 
 
 //Add new channel
@@ -31,8 +31,10 @@ socket.on('displaynewchannel', (data) => {
 
 //Function for displaying channel template
 function display_channel(channel) {
+    const date = new Date();
+    const date_format = date.getMonth() + ' ' + date.toLocaleString('default', { month: 'long' });
     const template = Handlebars.compile(document.querySelector('#displaychannel').innerHTML);
-    const content = template({'channel': channel});
+    const content = template({'channel': channel, 'date': date_format});
     document.querySelector('.list-group').innerHTML += content; 
 }
 
@@ -52,15 +54,20 @@ socket.on('displaymessages', (data) => {
     console.log(messages);
     document.querySelector('.chat-box').innerHTML = null;
     messages.forEach((message) => {
-        display_message(message);
+        count++;
+        console.log(count);
+        display_message(message, count);
     })
 });
 
 //Function for displaying new messages in the current channel
 socket.on('displaynewmessage', (data) => {
     const message = data['message'];
+    const messageid = data['messageid'];
     console.log(message);
-    display_message(message);
+    count++;
+    console.log(count);
+    display_message(message, count);
 })
 
 //Function for sending new messages to server
@@ -73,15 +80,23 @@ document.querySelector('#message-form').addEventListener('submit', (e) => {
 })
 
 //Function for displaying messages template
-function display_message(message) {
+function display_message(message, count) {
     if (message['userid'] === localStorage.getItem('userid')) {
         const template = Handlebars.compile(document.querySelector('#displaymessage-sender').innerHTML);
-        const content = template({'message': message['message'], 'userid': message['userid'], 'date':message['date']});
+        const content = template({'message': message['message'], 'userid': message['userid'], 'date':message['date'], 'id':count, 'id2':count});
         document.querySelector('.chat-box').innerHTML += content;
     }
     else {
         const template = Handlebars.compile(document.querySelector('#displaymessage-receiver').innerHTML);
-        const content = template({'message': message['message'], 'userid': message['userid'], 'date':message['date']});
-        document.querySelector('.chat-box').innerHTML += content;
+        const content = template({'message': message['message'], 'userid': message['userid'], 'date':message['date'], 'id':count, 'id2':count});
+        document.querySelector('.chat-box').innerHTML += content; 
     }
+}
+
+//Hiding a message
+function hide_message(content) {
+    const id = content.getAttribute('id');
+    const messageid = 'm' + id;
+    const message = document.querySelector(`#${messageid}`);
+    message.style.display = "none";
 }
