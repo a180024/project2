@@ -1,4 +1,4 @@
-# Project 2
+# Flack
 
 > Attempt at making at Web Chat Application using Flask and Socketio to support real-time messaging.
 
